@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f8f4fa"><title>Who Does What?</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:#17202a}
+body{background:linear-gradient(145deg,#eaf8fb,#f8f4fb 48%,#fde8ee)}button{font:inherit}
+.app{width:min(100%,520px);min-height:100svh;margin:auto;padding:12px 11px 24px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:8px}.header h1{font-size:clamp(24px,7vw,34px);margin:0;font-weight:900}
+.progress{background:#fff;padding:8px 12px;border-radius:999px;font-size:14px;font-weight:900;box-shadow:0 5px 18px #0000001a}
+.instruction{text-align:center;color:#5d6875;font-size:14px;line-height:1.35;margin:5px 8px 12px}
+.professions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.zone{min-height:198px;border:2px dashed #32415038;border-radius:18px;background:#ffffffd1;box-shadow:0 7px 20px #1e283c1a;padding:5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transition:.15s}
+.zone.over{transform:scale(1.025);border-color:#328bc7;background:#eefaff}.zone.correct{border-color:#43a86b;background:#effcf4}.zone.wrong{animation:shake .28s linear}
+.char{height:151px;width:auto;max-width:94%;object-fit:contain;pointer-events:none}.name{font-size:14px;font-weight:900}.basket{width:78%;height:23px;border:3px solid #7e8996;border-radius:12px 12px 18px 18px;margin-top:5px;background:#ffffffb8;position:relative}.basket:before{content:"";position:absolute;left:17%;right:17%;top:-11px;height:13px;border:3px solid #7e8996;border-bottom:0;border-radius:14px 14px 0 0}
+.cards-title{text-align:center;font-size:16px;font-weight:900;margin:14px 0 7px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.card{aspect-ratio:2/3;background:#fff;border-radius:13px;overflow:hidden;border:2px solid #28323c1a;box-shadow:0 6px 18px #1e283c1c;touch-action:none;user-select:none;cursor:grab;position:relative}.card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}.card.dragging{opacity:.55;transform:scale(1.04);z-index:20}.card.done{visibility:hidden}
+.tip{font-size:11px;color:#77808c;text-align:center;margin:9px 8px 0}.toast{position:fixed;left:50%;bottom:17px;transform:translate(-50%,130px);background:#17202a;color:#fff;padding:10px 15px;border-radius:999px;font-size:14px;font-weight:900;transition:.2s;z-index:20;white-space:nowrap}.toast.show{transform:translate(-50%,0)}
+.overlay{position:fixed;inset:0;background:#0f141e8c;display:none;align-items:center;justify-content:center;padding:20px;z-index:30}.modal{width:min(100%,410px);background:#fff;border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 25px 70px #00000040}.modal h2{margin:0 0 7px;font-size:30px}.modal p{color:#5d6875;line-height:1.45}.btn{border:0;background:#17202a;color:#fff;border-radius:999px;padding:12px 22px;font-weight:900}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media(max-width:350px){.zone{min-height:178px}.char{height:132px}.cards{grid-template-columns:repeat(2,1fr)}}
+@media(min-height:900px) and (max-width:430px){.zone{min-height:210px}.char{height:164px}}
+</style></head>
+<body><main class="app">
+<div class="header"><h1>Who Does What?</h1><div class="progress"><span id="done">0</span> / 12</div></div>
+<p class="instruction">Match each task card with the health professional responsible for it.</p>
+<section class="professions">
+<div class="zone" data-target="medical"><img class="char" src="assets/medical_officer.png" alt="Medical Officer"><div class="name">Medical Officer</div><div class="basket"></div></div>
+<div class="zone" data-target="nurse"><img class="char" src="assets/nurse.png" alt="Staff Nurse"><div class="name">Staff Nurse</div><div class="basket"></div></div>
+<div class="zone" data-target="anm"><img class="char" src="assets/anm.png" alt="ANM"><div class="name">ANM</div><div class="basket"></div></div>
+<div class="zone" data-target="asha"><img class="char" src="assets/asha.png" alt="ASHA"><div class="name">ASHA</div><div class="basket"></div></div>
+</section>
+<div class="cards-title">Drag the task cards</div><section class="cards" id="cards"></section>
+<div class="tip">You can also tap a card, then tap the correct professional.</div></main>
+<div class="toast" id="toast"></div>
+<div class="overlay" id="finish"><div class="modal"><h2>🎉 Great job!</h2><p>You matched all 12 task cards correctly.</p><p><strong>Score: 12 / 12</strong></p><button class="btn" id="again">Play Again</button></div></div>
+<script>
+const CARDS=[{"id": "task1", "image": "assess.png", "label": "Assess patient's condition", "target": "nurse"}, {"id": "task2", "image": "awareness.png", "label": "Awareness in the community", "target": "asha"}, {"id": "task3", "image": "health_promotion.png", "label": "Health promotion activities", "target": "anm"}, {"id": "task4", "image": "home_visits.png", "label": "Home visits", "target": "asha"}, {"id": "task5", "image": "immunization.png", "label": "Immunization and counselling services", "target": "nurse"}, {"id": "task6", "image": "follow_up.png", "label": "Follow-up services", "target": "nurse"}, {"id": "task7", "image": "lead_uphc.png", "label": "Lead UPHC team", "target": "medical"}, {"id": "task8", "image": "mobilize.png", "label": "Mobilize the community", "target": "asha"}, {"id": "task9", "image": "opd.png", "label": "OPD clinical services", "target": "medical"}, {"id": "task10", "image": "provide_treatment.png", "label": "Provide treatment", "target": "medical"}, {"id": "task11", "image": "record.png", "label": "Record maintenance", "target": "anm"}, {"id": "task12", "image": "outreach.png", "label": "Services in outreach camps like RI and UHSND", "target": "anm"}];
+let completed=0,selected=null,startedAt=Date.now();
+const cardsEl=document.getElementById('cards'),doneEl=document.getElementById('done'),toastEl=document.getElementById('toast'),finishEl=document.getElementById('finish');
+function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(window._t);window._t=setTimeout(()=>toastEl.classList.remove('show'),850)}
+function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function track(name,extra={}){window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:name,...extra});console.log(name,extra)}
+function build(){cardsEl.innerHTML='';selected=null;completed=0;doneEl.textContent='0';startedAt=Date.now();shuffle(CARDS).forEach(item=>{const c=document.createElement('div');c.className='card';c.dataset.target=item.target;c.dataset.id=item.id;const im=document.createElement('img');im.src='assets/'+item.image;im.alt=item.label;c.appendChild(im);c.addEventListener('pointerdown',dragStart);c.addEventListener('click',()=>{if(selected===c){selected=null;c.classList.remove('dragging');return}if(selected)selected.classList.remove('dragging');selected=c;c.classList.add('dragging');toast('Now tap the correct professional')});cardsEl.appendChild(c)})}
+function zoneAt(x,y){const e=document.elementFromPoint(x,y);return e?e.closest('.zone'):null}
+function answer(card,zone){if(!card||!zone||card.classList.contains('done'))return;if(card.dataset.target===zone.dataset.target){card.classList.add('done');completed++;doneEl.textContent=completed;toast('✓ Correct!');zone.classList.add('correct');setTimeout(()=>zone.classList.remove('correct'),450);track('task_correct',{task:card.dataset.id});if(completed===12){track('game_completed',{duration_seconds:Math.round((Date.now()-startedAt)/1000)});setTimeout(()=>finishEl.style.display='flex',500)}}else{zone.classList.add('wrong');toast('Try again!');track('task_incorrect',{task:card.dataset.id,selected:zone.dataset.target});setTimeout(()=>zone.classList.remove('wrong'),320)}}
+function dragStart(e){if(e.pointerType==='mouse'&&e.button!==0)return;const card=e.currentTarget,sx=e.clientX,sy=e.clientY;let moved=false;card.setPointerCapture?.(e.pointerId);card.classList.add('dragging');const move=ev=>{if(Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>8)moved=true;const z=zoneAt(ev.clientX,ev.clientY);document.querySelectorAll('.zone').forEach(d=>d.classList.toggle('over',d===z))};const up=ev=>{document.querySelectorAll('.zone').forEach(d=>d.classList.remove('over'));card.classList.remove('dragging');const z=zoneAt(ev.clientX,ev.clientY);if(moved&&z)answer(card,z);card.releasePointerCapture?.(e.pointerId);card.removeEventListener('pointermove',move);card.removeEventListener('pointerup',up);card.removeEventListener('pointercancel',up)};card.addEventListener('pointermove',move);card.addEventListener('pointerup',up);card.addEventListener('pointercancel',up)}
+document.querySelectorAll('.zone').forEach(z=>z.addEventListener('click',()=>{if(selected){const c=selected;selected=null;c.classList.remove('dragging');answer(c,z)}}));
+document.getElementById('again').addEventListener('click',()=>{finishEl.style.display='none';build();track('game_started')});build();track('game_started');
+</script></body></html>
